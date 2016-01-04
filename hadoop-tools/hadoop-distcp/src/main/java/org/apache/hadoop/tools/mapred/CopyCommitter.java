@@ -34,6 +34,7 @@ import org.apache.hadoop.tools.*;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.tools.util.DistCpUtils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -276,7 +277,8 @@ public class CopyCommitter extends FileOutputCommitter {
           LOG.info("Deleted " + trgtFileStatus.getPath() + " - Missing at source");
           deletedEntries++;
         } else {
-          throw new IOException("Unable to delete " + trgtFileStatus.getPath());
+          throw new IOException("Unable to delete " + trgtFileStatus.getPath()
+               + ". Consider using -skipTrash option if trash is unable.");
         }
         taskAttemptContext.progress();
         taskAttemptContext.setStatus("Deleting missing files from target. [" +

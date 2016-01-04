@@ -21,6 +21,7 @@ package org.apache.hadoop.tools.mapred;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -67,6 +68,7 @@ public class TestCopyCommitter {
   public static void create() throws IOException {
     config = getJobForClient().getConfiguration();
     config.setLong(DistCpConstants.CONF_LABEL_TOTAL_BYTES_TO_BE_COPIED, 0);
+    config.setLong(CommonConfigurationKeysPublic.FS_TRASH_INTERVAL_KEY, 10);
     cluster = new MiniDFSCluster.Builder(config).numDataNodes(1).format(true)
                       .build();
   }
@@ -207,6 +209,13 @@ public class TestCopyCommitter {
       conf.set(DistCpConstants.CONF_LABEL_TARGET_FINAL_PATH, targetBase);
 
       committer.commitJob(jobContext);
+      Path trashRootDir = fs.getTrashRoot(null);
+      Assert.assertTrue("Trash directory does not exist", fs.exists(trashRootDir));
+      Path trashDir = new Path(trashRootDir,"Current" + targetBaseAdd);
+      if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, trashDir.toString(), sourceBase)) {
+        Assert.fail("Path does not move to trash");
+      }
+
       if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, targetBase, sourceBase)) {
         Assert.fail("Source and target folders are not in sync");
       }
@@ -228,6 +237,17 @@ public class TestCopyCommitter {
     } finally {
       TestDistCpUtils.delete(fs, "/tmp1");
       conf.set(DistCpConstants.CONF_LABEL_DELETE_MISSING, "false");
+    }
+  }
+
+  private void printPath(FileSystem fs, Path p) throws IOException {
+    FileStatus[] status = fs.listStatus(p);
+
+    for(int i = 0;i < status.length;i++) {
+      System.out.println(status[i]);
+      if(status[i].isDirectory()) {
+        printPath(fs, status[i].getPath());
+      }
     }
   }
 
