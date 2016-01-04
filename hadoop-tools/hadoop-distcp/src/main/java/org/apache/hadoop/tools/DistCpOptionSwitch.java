@@ -76,6 +76,14 @@ public enum DistCpOptionSwitch {
           "files missing in source")),
 
   /**
+   * When -delete option on, files in target that are missing from source
+   * will be moved to the trash by default. This allows the files to be
+   * deleted skip the trash
+   */
+  DELETE_SKIPTRASH(DistCpConstants.CONF_LABEL_DELETE_SKIPTRASH,
+      new Option("skipTrash", false, "Delete from targe skip the trash")),
+
+  /**
    * Configuration file to use with hftps:// for securely copying
    * files across clusters. Typically the configuration file contains
    * truststore/keystore information such as location, password and type

@@ -24,6 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.Trash;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -270,8 +271,7 @@ public class CopyCommitter extends FileOutputCommitter {
         if (srcAvailable && trgtRelPath.equals(srcRelPath)) continue;
 
         // Target doesn't exist at source. Delete.
-        boolean result = (!targetFS.exists(trgtFileStatus.getPath()) ||
-            targetFS.delete(trgtFileStatus.getPath(), true));
+        boolean result = deletePath(targetFS, trgtFileStatus, conf);
         if (result) {
           LOG.info("Deleted " + trgtFileStatus.getPath() + " - Missing at source");
           deletedEntries++;
@@ -287,6 +287,19 @@ public class CopyCommitter extends FileOutputCommitter {
       IOUtils.closeStream(targetReader);
     }
     LOG.info("Deleted " + deletedEntries + " from target: " + targets.get(0));
+  }
+
+  private boolean deletePath(FileSystem targetFS,
+                             CopyListingFileStatus trgtFileStatus,
+                             Configuration conf) throws IOException {
+    if(!targetFS.exists(trgtFileStatus.getPath())) {
+      return true;
+    }
+    if(!conf.getBoolean(DistCpConstants.CONF_LABEL_DELETE_SKIPTRASH, false)) {
+      return Trash.moveToAppropriateTrash(targetFS, trgtFileStatus.getPath(), conf);
+    } else {
+      return targetFS.delete(trgtFileStatus.getPath(), true);
+    }
   }
 
   private void commitData(Configuration conf) throws IOException {

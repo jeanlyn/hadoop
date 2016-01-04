@@ -37,6 +37,7 @@ public class DistCpOptions {
   private boolean atomicCommit = false;
   private boolean syncFolder = false;
   private boolean deleteMissing = false;
+  private boolean deleteSkipTrash = false;
   private boolean ignoreFailures = false;
   private boolean overwrite = false;
   private boolean append = false;
@@ -127,6 +128,7 @@ public class DistCpOptions {
       this.atomicCommit = that.atomicCommit;
       this.syncFolder = that.syncFolder;
       this.deleteMissing = that.deleteMissing;
+      this.deleteSkipTrash = that.deleteSkipTrash;
       this.ignoreFailures = that.ignoreFailures;
       this.overwrite = that.overwrite;
       this.skipCRC = that.skipCRC;
@@ -203,6 +205,23 @@ public class DistCpOptions {
   public void setDeleteMissing(boolean deleteMissing) {
     validate(DistCpOptionSwitch.DELETE_MISSING, deleteMissing);
     this.deleteMissing = deleteMissing;
+  }
+
+
+  /**
+   * Should the file missing in source should be deleted skip trash?
+   * @return true if target files deleted skip trash
+   */
+  public boolean shouldDelteSkipTrash() {
+    return deleteSkipTrash;
+  }
+
+  /**
+   * Set if files delete skip the trash
+   * @param deleteSkipTrash - boolean switch
+   */
+  public void setDeleteSkipTrash(boolean deleteSkipTrash) {
+    this.deleteSkipTrash = deleteSkipTrash;
   }
 
   /**
@@ -634,6 +653,8 @@ public class DistCpOptions {
         String.valueOf(syncFolder));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.DELETE_MISSING,
         String.valueOf(deleteMissing));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.DELETE_SKIPTRASH,
+        String.valueOf(deleteSkipTrash));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.OVERWRITE,
         String.valueOf(overwrite));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.APPEND,
@@ -663,6 +684,7 @@ public class DistCpOptions {
         "atomicCommit=" + atomicCommit +
         ", syncFolder=" + syncFolder +
         ", deleteMissing=" + deleteMissing +
+        ", deleteSkipTrash=" + deleteSkipTrash +
         ", ignoreFailures=" + ignoreFailures +
         ", maxMaps=" + maxMaps +
         ", sslConfigurationFile='" + sslConfigurationFile + '\'' +

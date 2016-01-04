@@ -127,6 +127,10 @@ public class OptionsParser {
       option.setDeleteMissing(true);
     }
 
+    if(command.hasOption(DistCpOptionSwitch.DELETE_SKIPTRASH.getSwitch())) {
+      option.setDeleteSkipTrash(true);
+    }
+
     if (command.hasOption(DistCpOptionSwitch.SKIP_CRC.getSwitch())) {
       option.setSkipCRC(true);
     }

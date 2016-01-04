@@ -252,6 +252,23 @@ public class TestOptionsParser {
   }
 
   @Test
+  public void testParseDeleteSkipTrash() {
+    DistCpOptions options = OptionsParser.parse(new String[] {
+        "-overwrite",
+        "-delete",
+        "-skipTrash",
+        "hdfs://localhost:8020/source/first",
+        "hdfs://localhost:8020/target/"});
+    Assert.assertTrue(options.shouldDelteSkipTrash());
+    options = OptionsParser.parse(new String[] {
+        "-overwrite",
+        "-delete",
+        "hdfs://localhost:8020/source/first",
+        "hdfs://localhost:8020/target/"});
+    Assert.assertFalse(options.shouldDelteSkipTrash());
+  }
+
+  @Test
   public void testParseSSLConf() {
     DistCpOptions options = OptionsParser.parse(new String[] {
         "hdfs://localhost:8020/source/first",
