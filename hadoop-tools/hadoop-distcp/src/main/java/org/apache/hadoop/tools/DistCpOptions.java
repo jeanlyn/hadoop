@@ -217,11 +217,11 @@ public class DistCpOptions {
   }
 
   /**
-   * Set if files delete skip the trash
-   * @param deleteSkipTrash - boolean switch
+   * Set if files delete skip the trash.
+   * @param skipTrash - boolean switch
    */
-  public void setDeleteSkipTrash(boolean deleteSkipTrash) {
-    this.deleteSkipTrash = deleteSkipTrash;
+  public void setDeleteSkipTrash(boolean skipTrash) {
+    this.deleteSkipTrash = skipTrash;
   }
 
   /**
@@ -234,7 +234,7 @@ public class DistCpOptions {
   }
 
   /**
-   * Set if failures during copy be ignored
+   * Set if failures during copy be ignored.
    *
    * @param ignoreFailures - boolean switch
    */
@@ -290,6 +290,8 @@ public class DistCpOptions {
   /**
    * Set if we want to append new data to target files. This is valid only with
    * update option and CRC is not skipped.
+   *
+   * @param append - boolean switch
    */
   public void setAppend(boolean append) {
     validate(DistCpOptionSwitch.APPEND, append);
@@ -570,8 +572,8 @@ public class DistCpOptions {
    * Set targetPathExists.
    * @param targetPathExists Whether the target path of distcp exists.
    */
-  public boolean setTargetPathExists(boolean targetPathExists) {
-    return this.targetPathExists = targetPathExists;
+  public void setTargetPathExists(boolean targetPathExists) {
+    this.targetPathExists = targetPathExists;
   }
 
   /**
