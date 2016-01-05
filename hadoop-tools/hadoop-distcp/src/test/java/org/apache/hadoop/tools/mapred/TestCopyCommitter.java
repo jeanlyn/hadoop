@@ -212,6 +212,7 @@ public class TestCopyCommitter {
       Path trashRootDir = fs.getTrashRoot(null);
       Assert.assertTrue("Trash directory does not exist", fs.exists(trashRootDir));
       Path trashDir = new Path(trashRootDir,"Current" + targetBaseAdd);
+      // Test path have moved to trash
       if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, trashDir.toString(), sourceBase)) {
         Assert.fail("Path does not move to trash");
       }
@@ -228,6 +229,7 @@ public class TestCopyCommitter {
       if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, targetBase, sourceBase)) {
         Assert.fail("Source and target folders are not in sync");
       }
+
       if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, sourceBase, targetBase)) {
         Assert.fail("Source and target folders are not in sync");
       }
@@ -240,14 +242,59 @@ public class TestCopyCommitter {
     }
   }
 
-  private void printPath(FileSystem fs, Path p) throws IOException {
-    FileStatus[] status = fs.listStatus(p);
+  @Test
+  public void testDeleteSkipTrash() {
+    TaskAttemptContext taskAttemptContext = getTaskAttemptContext(config);
+    JobContext jobContext = new JobContextImpl(taskAttemptContext.getConfiguration(),
+        taskAttemptContext.getTaskAttemptID().getJobID());
+    Configuration conf = jobContext.getConfiguration();
 
-    for(int i = 0;i < status.length;i++) {
-      System.out.println(status[i]);
-      if(status[i].isDirectory()) {
-        printPath(fs, status[i].getPath());
+    String sourceBase;
+    String targetBase;
+    FileSystem fs = null;
+    try {
+      OutputCommitter committer = new CopyCommitter(null, taskAttemptContext);
+      fs = FileSystem.get(conf);
+      sourceBase = TestDistCpUtils.createTestSetup(fs, FsPermission.getDefault());
+      targetBase = TestDistCpUtils.createTestSetup(fs, FsPermission.getDefault());
+      String targetBaseAdd = TestDistCpUtils.createTestSetup(fs, FsPermission.getDefault());
+      fs.rename(new Path(targetBaseAdd), new Path(targetBase));
+
+      DistCpOptions options = new DistCpOptions(Arrays.asList(new Path(sourceBase)),
+          new Path("/out"));
+      options.setSyncFolder(true);
+      options.setDeleteMissing(true);
+      options.setDeleteSkipTrash(true);
+      options.appendToConf(conf);
+
+      CopyListing listing = new GlobbedCopyListing(conf, CREDENTIALS);
+      Path listingFile = new Path("/tmp1/" + String.valueOf(rand.nextLong()));
+      listing.buildListing(listingFile, options);
+
+      conf.set(DistCpConstants.CONF_LABEL_TARGET_WORK_PATH, targetBase);
+      conf.set(DistCpConstants.CONF_LABEL_TARGET_FINAL_PATH, targetBase);
+
+      Path trashRootDir = fs.getTrashRoot(null);
+      if(fs.exists(trashRootDir)) {
+        fs.delete(trashRootDir, true);
       }
+      committer.commitJob(jobContext);
+
+      if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, targetBase, sourceBase)) {
+        Assert.fail("Source and target folders are not in sync");
+      }
+      if (!TestDistCpUtils.checkIfFoldersAreInSync(fs, sourceBase, targetBase)) {
+        Assert.fail("Source and target folders are not in sync");
+      }
+      Assert.assertFalse("Path delete does not skip trash", fs.exists(trashRootDir));
+
+    } catch (Throwable e) {
+      LOG.error("Exception encountered while testing for delete missing", e);
+      Assert.fail("Delete missing failure");
+    } finally {
+      TestDistCpUtils.delete(fs, "/tmp1");
+      conf.set(DistCpConstants.CONF_LABEL_DELETE_MISSING, "false");
+      conf.set(DistCpConstants.CONF_LABEL_DELETE_SKIPTRASH, "false");
     }
   }
 
