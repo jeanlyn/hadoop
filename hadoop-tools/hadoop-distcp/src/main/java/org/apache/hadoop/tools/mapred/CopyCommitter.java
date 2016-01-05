@@ -34,7 +34,6 @@ import org.apache.hadoop.tools.*;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.tools.util.DistCpUtils;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -298,7 +297,8 @@ public class CopyCommitter extends FileOutputCommitter {
       return true;
     }
     if(!conf.getBoolean(DistCpConstants.CONF_LABEL_DELETE_SKIPTRASH, false)) {
-      return Trash.moveToAppropriateTrash(targetFS, trgtFileStatus.getPath(), conf);
+      return Trash.moveToAppropriateTrash(
+          targetFS, trgtFileStatus.getPath(), conf);
     } else {
       return targetFS.delete(trgtFileStatus.getPath(), true);
     }
